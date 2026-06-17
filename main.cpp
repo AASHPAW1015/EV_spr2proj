@@ -2,31 +2,34 @@
 #include <string>
 #include <limits>
 #include "network.h"
+#include "ui.h"
 using namespace std;
 
+static const int BOX_W = 59;
+
 static void drawBanner() {
-    cout << R"(
-  +===========================================================+
-  |          SMART EV CHARGING NETWORK  --  DSA Project      |
-  |          ITM Skills University  |  B.Tech CSE 2025-29    |
-  +===========================================================+
-)";
+    string top = "╭"; for (int i = 0; i < BOX_W; ++i) top += "─"; top += "╮";
+    string bot = "╰"; for (int i = 0; i < BOX_W; ++i) bot += "─"; bot += "╯";
+
+    cout << "  " << CYAN << top << RESET << "\n";
+    cout << "  " << CYAN << "│" << RESET << BOLD << WHITE
+         << center("SMART  EV  CHARGING  NETWORK", BOX_W) << RESET
+         << CYAN << "│" << RESET << "\n";
+    cout << "  " << CYAN << "│" << RESET << GRAY
+         << center("Singly Linked List  -  ITM Skills University", BOX_W) << RESET
+         << CYAN << "│" << RESET << "\n";
+    cout << "  " << CYAN << bot << RESET << "\n";
 }
 
-static void menu() {
-    cout <<
-        "\n  +-----------------------------------+\n"
-        "  |          NETWORK MENU             |\n"
-        "  +-----------------------------------+\n"
-        "  |  1. Add Station                   |\n"
-        "  |  2. Remove Station                |\n"
-        "  |  3. Update Station Status         |\n"
-        "  |  4. Display All Stations          |\n"
-        "  |  5. Search Station                |\n"
-        "  |  6. Increment Waiting Count       |\n"
-        "  |  7. Exit                          |\n"
-        "  +-----------------------------------+\n"
-        "  Choice: ";
+static void drawMenu() {
+    auto opt = [](const string& n, const string& label) {
+        return CYAN + "[" + n + "]" + RESET + " " + WHITE + label + RESET + "   ";
+    };
+    cout << "\n  " << GRAY << "──────────────────────────────────────────────────"
+         << "──────────" << RESET << "\n  "
+         << opt("1", "Add") << opt("2", "Remove") << opt("3", "Status")
+         << opt("4", "Refresh") << "\n  "
+         << opt("5", "Search") << opt("6", "Queue+") << opt("7", "Exit") << "\n";
 }
 
 static void clearInput() {
@@ -34,58 +37,72 @@ static void clearInput() {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
-int main() {
-    drawBanner();
+static string ask(const string& label) {
+    cout << "  " << CYAN << "▸ " << RESET << label << ": " << WHITE << flush;
+    string s; getline(cin, s);
+    cout << RESET;
+    return s;
+}
 
+int main() {
     ChargingNetwork network;
-    int choice = 0;
+    string message   = GRAY + "Welcome. Add a station to begin." + RESET;
+    string highlight = "";
 
     while (true) {
-        menu();
+        clearScreen();
+        drawBanner();
+        cout << "\n";
+        network.displayAll(highlight);
+        cout << "\n  " << message << "\n";
+        drawMenu();
+        cout << "\n  " << CYAN << "▸ " << RESET << "choice: " << WHITE << flush;
+
+        int choice = 0;
         if (!(cin >> choice)) { clearInput(); choice = 0; }
         clearInput();
+        cout << RESET;
 
-        cout << "\n";
+        highlight = "";
 
         if (choice == 1) {
-            string id, location;
-            int cap;
-            cout << "  Station ID    : "; getline(cin, id);
-            cout << "  Location      : "; getline(cin, location);
-            cout << "  Capacity (kW) : "; cin >> cap; clearInput();
-            network.addStation(id, location, cap);
+            string id  = ask("Station ID");
+            string loc = ask("Location");
+            cout << "  " << CYAN << "▸ " << RESET << "Capacity (kW): " << WHITE << flush;
+            int cap = 0;
+            if (!(cin >> cap)) { clearInput(); message = YELLOW + "⚠ " + RESET + "Invalid capacity."; continue; }
+            clearInput();
+            message = network.addStation(id, loc, cap);
 
         } else if (choice == 2) {
-            string id;
-            cout << "  Station ID to remove: "; getline(cin, id);
-            network.removeStation(id);
+            message = network.removeStation(ask("Station ID to remove"));
 
         } else if (choice == 3) {
-            string id, status;
-            cout << "  Station ID : "; getline(cin, id);
-            cout << "  New status (Available / Occupied / Maintenance): ";
-            getline(cin, status);
-            network.updateStatus(id, status);
+            string id = ask("Station ID");
+            cout << "  " << GRAY << "  status → " << GREEN << "Available  "
+                 << RED << "Occupied  " << YELLOW << "Maintenance" << RESET << "\n";
+            string st = ask("New status");
+            message = network.updateStatus(id, st);
 
         } else if (choice == 4) {
-            network.displayAll();
+            message = GRAY + "Dashboard refreshed." + RESET;
 
         } else if (choice == 5) {
-            string id;
-            cout << "  Station ID to search: "; getline(cin, id);
-            network.searchStation(id);
+            string id = ask("Station ID to search");
+            message   = network.searchStation(id);
+            highlight = id;
 
         } else if (choice == 6) {
-            string id;
-            cout << "  Station ID: "; getline(cin, id);
-            network.incrementWaiting(id);
+            message = network.incrementWaiting(ask("Station ID (car joins queue)"));
 
         } else if (choice == 7) {
-            cout << "  Shutting down network. Memory freed. Goodbye.\n\n";
+            clearScreen();
+            cout << "\n  " << CYAN << "⚡ Network shut down. All memory freed. ⚡"
+                 << RESET << "\n\n";
             break;
 
         } else {
-            cout << "  [!] Invalid choice. Enter 1-7.\n";
+            message = YELLOW + "⚠ " + RESET + "Invalid choice — pick 1-7.";
         }
     }
 

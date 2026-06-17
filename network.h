@@ -11,14 +11,16 @@ public:
     ChargingNetwork();
     ~ChargingNetwork();
 
-    void addStation(const string& id, const string& location, int capacity);
-    void removeStation(const string& id);
-    void updateStatus(const string& id, const string& newStatus);
-    void displayAll() const;
-    void searchStation(const string& id) const;
-    void incrementWaiting(const string& id);
+    string addStation(const string& id, const string& location, int capacity);
+    string removeStation(const string& id);
+    string updateStatus(const string& id, const string& newStatus);
+    string searchStation(const string& id) const;
+    string incrementWaiting(const string& id);
+
+    void displayAll(const string& highlightId = "") const;
 
 private:
-    void printNode(const ChargingStation* s) const;
+    void printNode(const ChargingStation* s, bool highlight) const;
+    bool exists(const string& id) const;
     void freeAll();
 };
