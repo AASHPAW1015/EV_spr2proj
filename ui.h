@@ -35,6 +35,14 @@ inline string center(const string& s, size_t w) {
     return string(l, ' ') + s + string(pad - l, ' ');
 }
 
+inline string trim(const string& s) {
+    const string ws = " \t\r\n";
+    size_t start = s.find_first_not_of(ws);
+    if (start == string::npos) return "";
+    size_t end = s.find_last_not_of(ws);
+    return s.substr(start, end - start + 1);
+}
+
 inline const string& statusColor(const string& st) {
     if (st == "Available")   return GREEN;
     if (st == "Occupied")    return RED;

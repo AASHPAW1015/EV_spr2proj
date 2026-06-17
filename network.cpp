@@ -83,12 +83,22 @@ string ChargingNetwork::removeStation(const string& id) {
     return RED + "✘ " + RESET + "Station \"" + id + "\" not found.";
 }
 
+static string canonicalStatus(const string& s) {
+    string lo = s;
+    for (char& c : lo) c = tolower(c);
+    if (lo == "available")   return "Available";
+    if (lo == "occupied")    return "Occupied";
+    if (lo == "maintenance") return "Maintenance";
+    return s;
+}
+
 string ChargingNetwork::updateStatus(const string& id, const string& newStatus) {
+    string canonical = canonicalStatus(newStatus);
     for (ChargingStation* cur = head; cur; cur = cur->next) {
         if (cur->id == id) {
-            cur->status = newStatus;
+            cur->status = canonical;
             return CYAN + "✔ " + RESET + id + " → " +
-                   statusColor(newStatus) + newStatus + RESET;
+                   statusColor(canonical) + canonical + RESET;
         }
     }
     return RED + "✘ " + RESET + "Station \"" + id + "\" not found.";

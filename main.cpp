@@ -41,7 +41,7 @@ static string ask(const string& label) {
     cout << "  " << CYAN << "▸ " << RESET << label << ": " << WHITE << flush;
     string s; getline(cin, s);
     cout << RESET;
-    return s;
+    return trim(s);
 }
 
 int main() {
